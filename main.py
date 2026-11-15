@@ -1,10 +1,9 @@
 import os
-import json
 import time
 import threading
 import requests
 from flask import Flask
-from datetime import datetime, timedelta
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -14,70 +13,80 @@ app = Flask(__name__)
 TOKEN = "9217225194:AAFAs31k38pRQDe7EzXEVISAuc2QQmk2quo"
 CHAT_ID = "-1001921257744"  # Grupo de Prévias
 
-# Cole aqui o mesmo LINK_BOT_VENDAS que você já colocou no agendar_geral.py
-LINK_BOT_VENDAS = "https://t.me/SEU_BOT_VENDAS_AQUI"
+# Coloque aqui o @ do seu Bot de Vendas VIP (Ex: "@PlayBoxADMVIP_bot")
+ARROBA_BOT_VENDAS = "@ADM_TudaoVIP_bot"
 
 # 17 segundos = ~3,5 vídeos por minuto (mude para 15 para 4/min ou 20 para 3/min)
 INTERVALO_SEGUNDOS = 17
 
+# Normaliza o @ automaticamente para nunca quebrar o link clicável no Telegram
+_bot_limpo = ARROBA_BOT_VENDAS.replace("https://t.me/", "").replace("http://t.me/", "").replace("@", "").strip()
+BOT_MENTION = f"@{_bot_limpo}"
+
 # =====================================================================
-# COLE AQUI OS 9 FILE_IDs QUE VOCÊ JÁ PREENCHEU NO SEU PC
+# MANTENHA AQUI OS SEUS 9 FILE_IDs DOS VÍDEOS DE PRÉVIA
 # =====================================================================
 VIDEOS_PREVIAS = [
-    "BAACAgEAAxkBAAMLavhS3g6KN1OOceG15XY6BZVGQqkAAiMIAAJe8sBH5GV2TswlYRM9BA",
-    "BAACAgEAAxkBAAMDavhS3iaPn30C6-aC1z_6ZENMN5kAAgsIAAJe8sBHnW0mO3Kr1CI9BA",
-    "BAACAgEAAxkBAAMEavhS3gx-f6PxBTWTim3Nie0JzOEAAgwIAAJe8sBHe6Egp_NtSrs9BA",
-    "BAACAgEAAxkBAAMFavhS3lh8zd81OxlLqMfho0l0jg4AAg0IAAJe8sBHmmhXO6T07es9BA",
-    "BAACAgEAAxkBAAMGavhS3s5x276fj9bTxFeXm0jN-ywAAg4IAAJe8sBHGeuRF_3u8M09BA",
-    "BAACAgEAAxkBAAMHavhS3rYS9VHI_WVrjSyBm2j67s0AAh4IAAJe8sBHM45KE75-yuk9BA",
-    "BAACAgEAAxkBAAMIavhS3iaQq9GMgq038Ul68518MK8AAh8IAAJe8sBHWBZs_mbK-y49BA",
-    "BAACAgEAAxkBAAMJavhS3vptWXzNz3JAeN_q1qd4m38AAiEIAAJe8sBHqw6m3TZNdzI9BA",
-    "BAACAgEAAxkBAAMKavhS3tF5dQMly-ENBuXCyR3HSw0AAiIIAAJe8sBHS6kBzhyOdp49BA",
+    "COLE_AQUI_O_FILE_ID_DO_VIDEO_1",
+    "COLE_AQUI_O_FILE_ID_DO_VIDEO_2",
+    "COLE_AQUI_O_FILE_ID_DO_VIDEO_3",
+    "COLE_AQUI_O_FILE_ID_DO_VIDEO_4",
+    "COLE_AQUI_O_FILE_ID_DO_VIDEO_5",
+    "COLE_AQUI_O_FILE_ID_DO_VIDEO_6",
+    "COLE_AQUI_O_FILE_ID_DO_VIDEO_7",
+    "COLE_AQUI_O_FILE_ID_DO_VIDEO_8",
+    "COLE_AQUI_O_FILE_ID_DO_VIDEO_9",
 ]
 
-# COLE AQUI O FILE_ID DO VÍDEO DE REMARKETING PESADO (Enviado a cada 9 prévias)
-VIDEO_REMARKETING_PESADO = "BAACAgEAAxkBAAMCavhQUhDE1L6PhoZarFJe5gTEvNYAAgoIAAJe8sBHOUMdPHEeBww9BA"
+# MANTENHA AQUI O FILE_ID DO VÍDEO DE REMARKETING PESADO (Enviado a cada 9 prévias)
+VIDEO_REMARKETING_PESADO = "COLE_AQUI_O_FILE_ID_DO_VIDEO_REMARKETING_PESADO"
+
 # =====================================================================
-# 4 VARIAÇÕES DE COPY PARA AS PRÉVIAS (Alinhadas com o Funil VIP)
+# 4 VARIAÇÕES DE COPY PARA AS PRÉVIAS (Sem botão + Fechamento com @)
 # =====================================================================
 
 COPY_1 = (
-    "🔥 <b>ISSO É APENAS 1% DO QUE ROLA NO VIP OFICIAL...</b>\n\n"
+    "🔥 <b>ISSO É APENAS 1% DO QUE ROLA NO VIP OFICIAL</b> ✅\n\n"
     "Aqui no grupo aberto você só vê o corte. Lá dentro o sistema é sem censura e atualizado todos os dias:\n\n"
-    "🔞 <b>Casadas no sigilo absoluto</b>\n"
-    "📸 <b>Flagras reais e câmeras escondidas</b>\n"
-    "📂 <b>Vazados deletados da internet em minutos</b>\n\n"
-    "👇 <b>TOQUE ABAIXO PARA LIBERAR SEU ACESSO VITALÍCIO:</b>\n"
-    f"👉 {LINK_BOT_VENDAS}"
+    "✔️ <b>Casadas no sigilo absoluto</b>\n"
+    "✔️ <b>Flagras reais e câmeras escondidas</b>\n"
+    "✔️ <b>Vazados deletados da internet em minutos</b>\n"
+    "✔️ <b>Acesso vitalício sem mensalidade</b>\n\n"
+    "🔒 Acesso imediato após a compra! 👑\n\n"
+    f"📍 Adquira o VIP já: {BOT_MENTION} !\n"
+    f"📍 Adquira o VIP já: {BOT_MENTION} !"
 )
 
 COPY_2 = (
     "👑 <b>CASADAS NO SIGILO E VÍDEOS PROIBIDOS</b> 👑\n\n"
     "O puro suco da traição real! Vídeos gravados escondido que jamais poderiam vazar na internet:\n\n"
-    "• Gravando na cama enquanto o marido trabalha\n"
-    "• Flagras amadores sem cortes e sem tarjas\n"
-    "• Acervo completo liberado na hora via PIX\n\n"
-    "⚠️ <i>Sem mensalidade — pagou uma vez, entrou pra sempre.</i>\n\n"
-    "👇 <b>GARANTA SUA VAGA NO VIP AGORA:</b>\n"
-    f"👉 {LINK_BOT_VENDAS}"
+    "✔️ <b>Gravando na cama enquanto o marido trabalha</b>\n"
+    "✔️ <b>Flagras amadores sem cortes e sem tarjas</b>\n"
+    "✔️ <b>Pagou uma vez, entrou pra sempre</b>\n\n"
+    "🔒 Acesso imediato após a compra! 👑\n\n"
+    f"📍 Adquira o VIP já: {BOT_MENTION} !\n"
+    f"📍 Adquira o VIP já: {BOT_MENTION} !"
 )
 
 COPY_3 = (
     "🔞 <b>O VERDADEIRO SUBMUNDO DOS VAZADOS REAIS</b> 🔞\n\n"
-    "Cansado de grupo fake que só enrola? No nosso <b>VIP Oficial</b> você entra na hora e já tem acesso imediato a milhares de vídeos exclusivos:\n\n"
-    "✅ Câmeras escondidas e flagras reais\n"
-    "✅ Amadoras e vazados inéditos todos os dias\n"
-    "✅ Bônus secreto liberado dentro do bot\n\n"
-    "👇 <b>CLIQUE E ENTRE ANTES QUE AS VAGAS FECHEM:</b>\n"
-    f"👉 {LINK_BOT_VENDAS}"
+    "Cansado de grupo fake que só enrola? No nosso <b>VIP Oficial</b> você entra na hora com liberação automática via PIX:\n\n"
+    "✔️ <b>Câmeras escondidas e flagras reais</b>\n"
+    "✔️ <b>Amadoras e vazados inéditos todos os dias</b>\n"
+    "✔️ <b>Bônus secreto liberado dentro do bot</b>\n\n"
+    "🔒 Acesso imediato após a compra! 👑\n\n"
+    f"📍 Adquira o VIP já: {BOT_MENTION} !\n"
+    f"📍 Adquira o VIP já: {BOT_MENTION} !"
 )
 
 COPY_4 = (
-    "💣 <b>TEM UM BÔNUS SECRETO LIBERADO HOJE NO BOT...</b>\n\n"
+    "💣 <b>TEM UM BÔNUS SECRETO LIBERADO HOJE NO BOT</b> 💣\n\n"
     "Além de todo o acervo principal com casadas, flagras e câmeras escondidas, quem entrar hoje pelo bot ainda pode desbloquear o <b>Drive Secreto com +400 vídeos amadores</b> sem censura.\n\n"
-    "🚨 <i>Oferta válida apenas enquanto o link estiver ativo!</i>\n\n"
-    "👇 <b>TOQUE NO BOTÃO E DESBLOQUEIE AGORA:</b>\n"
-    f"👉 {LINK_BOT_VENDAS}"
+    "✔️ <b>Sem cortes, sem censura e sem mensalidade</b>\n"
+    "✔️ <b>Vagas promocionais encerrando hoje</b>\n\n"
+    "🔒 Acesso imediato após a compra! 👑\n\n"
+    f"📍 Adquira o VIP já: {BOT_MENTION} !\n"
+    f"📍 Adquira o VIP já: {BOT_MENTION} !"
 )
 
 LEGENDAS_PREVIAS = [COPY_1, COPY_2, COPY_3, COPY_4]
@@ -88,16 +97,15 @@ LEGENDAS_PREVIAS = [COPY_1, COPY_2, COPY_3, COPY_4]
 COPY_REMARKETING_PESADO = (
     "🚨 <b>PARE TUDO E LEIA ISSO ANTES QUE ESSE POST SAIA DO AR!</b> 🚨\n\n"
     "Você acabou de ver uma sequência de amostras aqui fora, mas a verdade é uma só: <b>o melhor conteúdo nunca é postado no grupo grátis</b> porque o Telegram derruba.\n\n"
-    "🔥 <b>O QUE TE ESPERA AGORA NO VIP OFICIAL:</b>\n"
-    "🔞 <b>Casadas no sigilo</b> gravando tudo sem medo\n"
-    "📸 <b>Câmeras escondidas</b> e flagras proibidos\n"
-    "📂 <b>Vazados raros</b> que somem da internet em 5 minutos\n"
-    "💣 <b>Acesso ao Drive Secreto da Novinha de 19 anos</b> (+400 vídeos amadores sem cortes, chorando e implorando)\n\n"
-    "✅ <b>ACESSO VITALÍCIO — SEM MENSALIDADE!</b>\n"
-    "⚡ <b>Liberação automática e imediata após o PIX.</b>\n\n"
-    "⚠️ <i>As vagas promocionais de hoje estão encerrando. Não fique de fora assistindo só migalhas!</i>\n\n"
-    "👇 <b>TOQUE NO BOTÃO ABAIXO E GARANTA SEU ACESSO AGORA:</b>\n"
-    f"👉 {LINK_BOT_VENDAS}"
+    "🔥 <b>BENEFÍCIOS EXCLUSIVOS NO VIP OFICIAL:</b> ⤵️\n"
+    "✔️ <b>Casadas no sigilo</b> gravando tudo sem medo\n"
+    "✔️ <b>Câmeras escondidas</b> e flagras proibidos\n"
+    "✔️ <b>Vazados raros</b> que somem da internet em 5 minutos\n"
+    "✔️ <b>Drive Secreto da Novinha de 19 anos</b> (+400 vídeos amadores sem cortes)\n"
+    "✔️ <b>Acesso vitalício</b> — sem mensalidade\n\n"
+    "🔒 Acesso imediato após a compra! 👑\n\n"
+    f"📍 Adquira o VIP já: {BOT_MENTION} !\n"
+    f"📍 Adquira o VIP já: {BOT_MENTION} !"
 )
 
 # Controle de status e trava para não duplicar disparos
@@ -110,14 +118,9 @@ _lock_inicio = threading.Lock()
 _thread_iniciada = False
 
 
-def enviar_video_id(file_id, legenda, texto_botao):
-    """Envia vídeo pelo file_id com legenda HTML e botão inline."""
+def enviar_video_id(file_id, legenda):
+    """Envia vídeo pelo file_id com legenda HTML limpa e sem botão."""
     url = f"https://api.telegram.org/bot{TOKEN}/sendVideo"
-    markup = json.dumps({
-        "inline_keyboard": [
-            [{"text": texto_botao, "url": LINK_BOT_VENDAS}]
-        ]
-    })
 
     payload = {
         "chat_id": CHAT_ID,
@@ -125,7 +128,6 @@ def enviar_video_id(file_id, legenda, texto_botao):
         "caption": legenda,
         "parse_mode": "HTML",
         "disable_notification": False,
-        "reply_markup": markup,
     }
 
     try:
@@ -174,17 +176,13 @@ def iniciar_disparos_continuos():
             indice_copy += 1
 
             print(f"🔥 Enviando Prévia {num_video}/{len(ids_validos)}...")
-            enviar_video_id(file_id_previa, legenda_atual, "🔥 ENTRAR NO VIP OFICIAL AGORA")
+            enviar_video_id(file_id_previa, legenda_atual)
             time.sleep(INTERVALO_SEGUNDOS)
 
         # 2. Após os 9 vídeos, dispara o vídeo de Remarketing Pesado
         if VIDEO_REMARKETING_PESADO and not VIDEO_REMARKETING_PESADO.startswith("COLE_AQUI"):
             print("🚨 Enviando VÍDEO DE REMARKETING PESADO...")
-            enviar_video_id(
-                VIDEO_REMARKETING_PESADO,
-                COPY_REMARKETING_PESADO,
-                "🚨 LIBERAR VIP + DRIVE SECRETO AGORA"
-            )
+            enviar_video_id(VIDEO_REMARKETING_PESADO, COPY_REMARKETING_PESADO)
             time.sleep(INTERVALO_SEGUNDOS)
 
         ciclo_numero += 1
