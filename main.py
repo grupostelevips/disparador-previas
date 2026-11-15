@@ -16,8 +16,8 @@ CHAT_ID = "-1001921257744"  # Grupo de Prévias
 # Coloque aqui o @ do seu Bot de Vendas VIP (Ex: "@PlayBoxADMVIP_bot")
 ARROBA_BOT_VENDAS = "@ADM_TudaoVIP_bot"
 
-# 17 segundos = ~3,5 vídeos por minuto (mude para 15 para 4/min ou 20 para 3/min)
-INTERVALO_SEGUNDOS = 17
+# 40 segundos = exatamente 1,5 vídeo por minuto (3 vídeos a cada 2 minutos)
+INTERVALO_SEGUNDOS = 40
 
 # Normaliza o @ automaticamente para nunca quebrar o link clicável no Telegram
 _bot_limpo = ARROBA_BOT_VENDAS.replace("https://t.me/", "").replace("http://t.me/", "").replace("@", "").strip()
